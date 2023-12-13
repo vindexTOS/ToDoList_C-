@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using ToDoApi.controller;
 using ToDoApi.DTO;
 using todoc.Cotnext;
 using todoc.Models;
+using todoc.Services;
 
 namespace ToDoApp.Api.Controller;
 
@@ -12,61 +14,103 @@ public class ToDoController : ControllerBase
 
 {
 	private readonly TaskDbContext _context;
-	
-	
-	public ToDoController(TaskDbContext context)
+	private readonly IToDoService _Service;
+
+	public ToDoController(TaskDbContext context, IToDoService service)
 	{
 		_context = context;
+		_Service = service;
 	}
 
-		[HttpGet]
-		public ActionResult<IEnumerable<ToDoItem>> Get()
+	[HttpGet]
+	public async Task<IActionResult> Get()
+	{
+		try
 		{
-		return Ok(_context.ToDoItems.ToList());
+			var result = await _Service.Get();
+			return Ok(result);
 		}
-		[HttpPost]
-		public ActionResult<ToDoItem> Post([FromBody] ToDoItemDTO itemDTO)
+		catch (InvalidDataException ex)
 		{
-		var item = new ToDoItem  {
-			Title = itemDTO.Title,
-		};
-		
-
-		_context.ToDoItems.Add(item);
-		_context.SaveChanges();
-				itemDTO.ID = item .ID;
-
-		return CreatedAtAction(nameof(Get), new { id = itemDTO.ID }, itemDTO);
+			return StatusCode(500, ex.Message);
+		}
+	}
+	[HttpPost]
+	public async Task<IActionResult> Post([FromBody] ToDoItemDTO itemDTO)
+	{
+		try
+		{
+			var createdItem = await _Service.PostToDoItem(itemDTO);
+			return CreatedAtAction(nameof(Get), new { id = createdItem.ID }, createdItem);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return NotFound(new { message = ex.Message });
+		}
+		catch (InvalidDataException ex)
+		{
+			return StatusCode(500, new { message = ex.Message });
+		}
 	}
 
-		[HttpGet("{id}")]
-		public ActionResult<ToDoItem>GetOne(int id)
+	[HttpGet("{id}")]
+	public async Task<IActionResult> GetOne(int id)
+	{
+		try
 		{
-		var singleItem = _context.ToDoItems.Find(id);
-		
-			if(singleItem is null)
-			{
-			return NotFound();
-			}
+			var result = await _Service.GetSingleToDo(id);
+			return Ok(result);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return NotFound(new { message = ex.Message });
 
-		return Ok(singleItem);
+		}
+		catch (InvalidDataException ex)
+		{
+
+			return StatusCode(500, new { message = ex.Message });
+
 		}
 
-		[HttpPut]
-		public ActionResult<ToDoItem>Put([FromBody] ToDoItem updatedItem)
+	}
+
+	[HttpPut]
+	public async Task<IActionResult> Put([FromBody] ToDoItem updatedItem)
+	{
+		try
 		{
-			int id = updatedItem.ID;
-		var isItemExist = _context.ToDoItems.Find(id);
-			if(isItemExist is null)
-			{
-			return NotFound();
-			}
+			var result = await _Service.PutToDoItem(updatedItem);
+			return Ok(result);
+		}
+		catch (InvalidOperationException ex)
+		{
 
-		isItemExist.Title = updatedItem.Title;
-		isItemExist.IsActive = updatedItem.IsActive;
+			return NotFound(new { message = ex.Message });
 
-		_context.SaveChanges();
+		}
+		catch (InvalidDataException ex)
+		{
+			return StatusCode(500, new { message = ex.Message });
+		}
+	}
 
-		return GetOne(id);
+	[HttpDelete("{id}")]
+	public async Task<IActionResult> Delete(int id)
+	{
+		try
+		{
+			await _Service.DeleteToDoItem(id);
+			return Ok();
+		}
+		catch (InvalidOperationException ex)
+		{
+			return NotFound(new { message = ex.Message });
+		}
+		catch (InvalidDataException ex)
+		{
+			return StatusCode(500, ex.Message);
+		}
 	}
 }
+
