@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using ToDoApi.controller;
 using ToDoApi.DTO;
-using todoc.Cotnext;
 using todoc.Models;
-using todoc.Services;
+
 
 namespace ToDoApp.Api.Controller;
 
@@ -13,13 +12,11 @@ namespace ToDoApp.Api.Controller;
 public class ToDoController : ControllerBase
 
 {
-	private readonly TaskDbContext _context;
 	private readonly IToDoService _Service;
 
-	public ToDoController(TaskDbContext context, IToDoService service)
+	public ToDoController(IToDoService service)
 	{
-		_context = context;
-		_Service = service;
+    _Service = service;
 	}
 
 	[HttpGet]

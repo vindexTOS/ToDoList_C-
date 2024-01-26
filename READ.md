@@ -16,3 +16,6 @@ dotnet ef database update
 #dotnet
 dotnet clean
 dotnet build
+
+#JWT
+dotnet add package System.IdentityModel.Tokens.Jwt --version 6.14.1

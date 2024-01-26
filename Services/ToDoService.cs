@@ -1,9 +1,5 @@
 
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using ToDoApi.controller;
 using ToDoApi.DTO;
 using todoc.Cotnext;
@@ -44,27 +40,15 @@ public class ToDoService : IToDoService
 
 	public async Task<ToDoItem> GetSingleToDo(int id)
 	{
-		var result = await _context.ToDoItems.FindAsync(id);
-
-		if (result is null)
-		{
-			throw new InvalidOperationException("Item not found");
-
-		}
-		return result;
+		var result = await _context.ToDoItems.FindAsync(id) ?? throw new InvalidOperationException("Item not found");
+        return result;
 	}
 
 	public async Task<ToDoItem> PutToDoItem(ToDoItem updatedItem)
 	{
 		int id = updatedItem.ID;
-		var isItemExist = await _context.ToDoItems.FindAsync(id);
-
-		if (isItemExist is null)
-		{
-			throw new InvalidOperationException("Item not found");
-		}
-
-		isItemExist.Title = updatedItem.Title;
+		var isItemExist = await _context.ToDoItems.FindAsync(id) ?? throw new InvalidOperationException("Item not found");
+        isItemExist.Title = updatedItem.Title;
 		isItemExist.IsActive = updatedItem.IsActive;
 
 		await _context.SaveChangesAsync();
@@ -74,12 +58,8 @@ public class ToDoService : IToDoService
 
 	public async Task DeleteToDoItem(int id)
 	{
-		var result = _context.ToDoItems.FirstOrDefault(x => x.ID == id);
-		if (result is null)
-		{
-			throw new InvalidOperationException("Item not found");
-		}
-		_context.Remove(result);
+		var result = _context.ToDoItems.FirstOrDefault(x => x.ID == id) ?? throw new InvalidOperationException("Item not found");
+        _context.Remove(result);
 		await _context.SaveChangesAsync();
 	}
 
